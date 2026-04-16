@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>FF Awards HQ</title>
+  <!-- Tailwind via CDN (loaded async - app waits) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React from CDN -->
+  <script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;}
+    html,body{margin:0;padding:0;background:#060c16;width:100%;height:100%;}
+    body{font-family:'IBM Plex Mono','Courier New',monospace;overflow-x:hidden;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    ::-webkit-scrollbar{width:4px;}
+    ::-webkit-scrollbar-track{background:#0a1628;}
+    ::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:2px;}
+    select,option{background:#0b1929!important;color:white!important;}
+    #boot{display:flex;align-items:center;justify-content:center;height:100vh;
+          flex-direction:column;gap:16px;background:#060c16;}
+    #boot-err{display:none;max-width:90vw;background:#1c0505;color:#fca5a5;
+              border:1px solid #7f1d1d;border-radius:12px;padding:16px;
+              font-size:12px;line-height:1.7;white-space:pre-wrap;}
+    /* Mobile touch improvements */
+    button{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+    input,select{font-size:16px!important;} /* Prevent zoom on iOS/Android */
+  </style>
+</head>
+<body>
+<div id="boot">
+  <div style="font-size:3rem">🏈</div>
+  <div style="font-size:1.2rem;font-weight:900;color:#facc15;letter-spacing:-.04em">AWARDS HQ</div>
+  <div style="font-size:.65rem;color:#334155;letter-spacing:.2em;text-transform:uppercase">Connecting to Fleaflicker…</div>
+  <div id="boot-spin" style="width:24px;height:24px;border:3px solid #1e3a5f;border-top-color:#facc15;border-radius:50%;animation:spin .8s linear infinite"></div>
+  <div id="boot-err"></div>
+</div>
+<div id="root" style="display:none;min-height:100vh"></div>
+
+<script>
+// Android bridge callback registry
+window.ffCallbacks = {};
+
+function showErr(msg) {
+  document.getElementById('boot-spin').style.display='none';
+  var el = document.getElementById('boot-err');
+  el.style.display='block';
+  el.textContent = msg;
+}
+window.onerror = function(msg, src, line, col, err) {
+  var d = err ? err.message : msg;
+  showErr('Fehler: ' + d + '\n' + (src ? src.split('/').pop() + ' Z.' + line : ''));
+};
+window.addEventListener('unhandledrejection', function(e) {
+  showErr('Promise-Fehler: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason)));
+});
+setTimeout(function() {
+  if (!window.__mounted) {
+    var hasBridge = !!(window.AndroidBridge && window.AndroidBridge.isAvailable());
+    var hasReact  = typeof React !== 'undefined';
+    showErr(
+      'App konnte nicht starten.\n\n' +
+      'Android Bridge: ' + (hasBridge ? 'OK ✓' : 'FEHLT (kein Internet?)') + '\n' +
+      'React: '          + (hasReact  ? 'OK ✓' : 'FEHLT (CDN nicht erreichbar)') + '\n\n' +
+      'Internetverbindung prüfen und App neu starten.'
+    );
+  }
+}, 20000);
+</script>
+
+<!-- Compiled app — no Babel needed -->
+<script src="app.js"></script>
+</body>
+</html>
